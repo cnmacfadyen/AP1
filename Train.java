@@ -7,10 +7,10 @@ public class Train implements Runnable {
 	private String s;
 	private RailwaySegment currentPosition;
 	
-	public Train(int number) { //this will be the final constructor!! look at the Train class in Practice folder
+	public Train(int number, RailwaySegment currentPosition) { 
 		this.number=number;
 		this.setRandomSpeed();
-		this.setCurrentPosition(currentPosition);
+		this.currentPosition=currentPosition;
 	}
 	
 	public int getSpeed() {
@@ -27,6 +27,14 @@ public class Train implements Runnable {
 	
 	public int getNumber() {
 		return this.number;
+	}
+	
+	public RailwaySegment getCurrentPosition() {
+		return this.currentPosition;
+	}
+	
+	public void setCurrentPosition(RailwaySegment r) {
+		this.currentPosition=r;
 	}
 	
 	public boolean isExpress() {
@@ -53,53 +61,41 @@ public class Train implements Runnable {
 		return "I spend " + trackTime + " seconds on each track and " + stationTime + " seconds at each station.";
 	}
 	
-	public RailwaySegment getCurrentPosition() {
-		return this.currentPosition;
-	}
-	
-	public void setCurrentPosition(RailwaySegment r) {
-		this.currentPosition=r;
-	}
-	
 	public String toString() {
 		return "My name is " + this.getNumber() + " and I can travel at " + speed + "m/s";
 	}
 
 	@Override
 	public void run() {
-		RailwayLine r = new RailwayLine();
-		RailwaySegment startPos = r.setupLinkedList();
-		int total = r.getTotalNumberOfSegments();
 
-		//for(int i=0;i<total-1;i++) { 
-		
-		
-			currentPosition = startPos;
-			currentPosition.enter(this); //enter the first station
-			currentPosition.setCurrentTrain(this);
-//			currentPosition.setStatus("---" + currentPosition.getName() + "--" + this.getNumber() + ",--|");
-			int timeToSpend = currentPosition.timeSpentByTrain(this);
-			try {
-				Thread.sleep(timeToSpend*100);
-			} catch (InterruptedException e) {
-				e.printStackTrace();
-			}
-			currentPosition.leave(this);
+		RailwaySegment startPos = this.getCurrentPosition();
+
 			
 			while(currentPosition.getNext()!=null) {	
-				currentPosition = currentPosition.getNext();	
-				
-				currentPosition.enter(this); //enter the next station
-				currentPosition.setCurrentTrain(this);
-//				currentPosition.setStatus("---" + currentPosition.getName() + "--" + this.getNumber() + ",--|");
-				
-				int timeToSpend2 = currentPosition.timeSpentByTrain(this);
-				try {
-					Thread.sleep(timeToSpend2*100);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
+				if(currentPosition.hasSpace()) {
+					currentPosition.enter(this); //enter the next station
+					currentPosition.setCurrentTrain(this);
+					int timeToSpend = currentPosition.timeSpentByTrain(this);
+					try {
+						Thread.sleep(timeToSpend*100);
+					}catch (InterruptedException e) {
+						e.printStackTrace();
+					}finally {
+						currentPosition.leave(this);
+					}					
+				}while(currentPosition.isFull()) {
+					try {
+						Thread.sleep(1000); //sleep for a second if the segment is full
+											//I realise the locks and conditions should cover this but it seemed to help!
+					}catch(InterruptedException e) {
+						e.printStackTrace();
+					}
 				}
-				currentPosition.leave(this);
+
+				if(currentPosition.getNext() == null) { 
+					currentPosition.enter(this); //enter the final segment (end of the line) and never leave
+				}				
+				currentPosition = currentPosition.getNext(); //set the next position for the train to enter
 			}
 			
 			

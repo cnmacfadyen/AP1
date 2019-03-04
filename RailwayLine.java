@@ -7,11 +7,11 @@ public class RailwayLine {
 	private RailwaySegment[] railway = new RailwaySegment[totalTracksAndStations];
 	
 	private final Station glasgow = new Station("Glasgow", 4, 600);
-	private final Track track1 = new Track(1000); 
+	private final Track track1 = new Track(1000, 1); 
 	private final Station dunkeld = new Station("Dunkeld & Birnam", 3, 200);
-	private final Track track2 = new Track(2000);
+	private final Track track2 = new Track(2000, 1);
 	private final Station kingussie = new Station("Kingussie", 2, 100);
-	private final Track track3 = new Track(3000);
+	private final Track track3 = new Track(3000, 1);
 	private final Station inverness = new Station("Inverness", 4, 200);
 	private final EndOfTheLine end = new EndOfTheLine();
 	
