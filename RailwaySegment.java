@@ -6,7 +6,6 @@ public abstract class RailwaySegment {
 	private String name;
 	private int capacity;
 	private int length;
-	private String status;
 	private RailwaySegment previousSegment, nextSegment;
 	private Train current;
 	private ArrayList<Train> currentTrains = new ArrayList<Train>();;
@@ -19,10 +18,8 @@ public abstract class RailwaySegment {
 	}
 
 	public RailwaySegment() { //for EndOfTheLine
-
+		
 	}
-	
-	/////////////////////////// GETTERS AND SETTERS //////////////////////////
 
 	public int getLength() {
 		return this.length;
@@ -46,14 +43,6 @@ public abstract class RailwaySegment {
 	
 	public void setName(String name) {
 		this.name=name;
-	}
-	
-	public void setStatus(String s) {
-		this.status=s;
-	}
-	
-	public String getStatus() {
-		return this.status;
 	}
 	
 	public RailwaySegment getPrevious() {
@@ -88,18 +77,11 @@ public abstract class RailwaySegment {
 		return this.current;
 	}
 
-	/////////////////////////// OTHER METHODS //////////////////////////
-	
 	public int timeSpentByTrain(Train t) {
 		int timeSpent = this.length/t.getSpeed();
 		return timeSpent;
 	}
-	
-	public void addToCurrentTrains(Train t, RailwaySegment r) {
-		t.setCurrentPosition(r);
-		this.currentTrains.add(t);
-	}
-			
+		
 	public boolean isFull() {
 		if(currentTrains.size()==this.capacity) {
 			return true;
@@ -120,29 +102,19 @@ public abstract class RailwaySegment {
 		segmentLock.lock();
 		this.current=t;
 		this.currentTrains.add(current);
-	//	System.out.println(t.getNumber() + " has locked enter\n");
-	//	System.out.println(this.getName() + " : " + currentTrains);
 		RailwaySegment next = this.getNext();
-
-		//System.out.println(this.getName() + " has " + numTrains + " trains");	
+		
 		try {
 			if(this.isFull()) {
-				//System.out.println(this.getName() + " is full");
 			}
 			while(next!=null && next.isFull()) { // if the segment is at capacity and we are not at the last station
-				//System.out.println(t.getNumber() + " is waiting..."); 
 				condition.await();				
 			}			
 			t.setCurrentPosition(this);
-		
-		//	System.out.println(t.getNumber() + " has entered..." + this.getName() + " currently holding : " + currentTrains.size());
-			//System.out.println(currentTrains);
-
 		}catch(InterruptedException e) {
 			e.printStackTrace();
 		}finally {
 			segmentLock.unlock();
-		//	System.out.println(t.getNumber() + " has unlocked enter\n");
 		}	
 	}
 	
@@ -150,38 +122,19 @@ public abstract class RailwaySegment {
 		segmentLock.lock();
 		this.currentTrains.remove(current);
 		this.current = null;
-		//System.out.println(t.getNumber() + " has locked leave\n");
-		//System.out.println(this.getName() + " : " + currentTrains);
 		try {
 			RailwaySegment next = this.getNext();
-		//System.out.println(currentTrains);
-		//System.out.println(t.getNumber() + " has left..." + this.getName() + " currently holding: " + currentTrains.size()); 
-		//	if(!this.isFull()) { //if there is space
-			if(next.hasSpace()) {
-				condition.signal();
-				//System.out.println(t.getNumber() + " is signalling...");
+			if(next.hasSpace() || this.hasSpace()) {
+				condition.signalAll();
 			}
-				
-			//System.out.println(t.getNumber() + " is signalling...");
-		//}
-//		if(!next.isFull()) {
-//			next.enter(t);
-//		}
-//		if(next!=null) {
-//			next.enter(t);
-//		}else {
-//			//do nothing
-//		}
 		} finally {
 			segmentLock.unlock();
-			//System.out.println(t.getNumber() + " has unlocked leave\n");
 		}
-
 	}
 		
 	public String toString() {
 		if(this.getCurrentTrains().isEmpty()) { //if there are no trains on the segment
-			return "|--" + this.getName() + ",--|";
+			return "|--" + this.getName() + "--|";
 		}else {
 			String stat = "|--" + this.getName() + "--";
 			for (int i=0;i<this.getCurrentTrains().size();i++) { //loop over the array of current trains
